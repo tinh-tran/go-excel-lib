@@ -1,15 +1,15 @@
-package utils
+package main
 
 import (
 	"fmt"
-	"hrm-generate-excel/components/generate_payroll/models"
 	"reflect"
 )
 
 type DummyDataFetcher struct {
 	CurRow int
 	MaxRow int
-	Data   []models.PayrollDetail
+	Data   []User
+	Header []string
 }
 
 func (d *DummyDataFetcher) NextRow() []string {

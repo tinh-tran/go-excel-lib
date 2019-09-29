@@ -1,10 +1,9 @@
-package utils
+package main
 
 import (
 	"database/sql"
 	"fmt"
-	"hrm-generate-excel/logger"
-	"hrm-generate-excel/utils/excel"
+	"go-excel-lib/excel"
 	"reflect"
 	"strconv"
 	"time"
@@ -22,6 +21,7 @@ type PayrollSheet struct {
 	MaxRow int
 	MaxCol int
 	Data   []interface{}
+	Header []string
 }
 
 func (a *PayrollSheetFetcher) GetSheetNames() []string {
@@ -52,37 +52,41 @@ func (a *PayrollSheet) NextRow() []string {
 	}
 	results := []string{}
 	val := reflect.ValueOf(a.Data[a.CurRow])
-	for i := 0; i < val.NumField(); i++ {
-		var value interface{}
-		switch v := val.Field(i).Interface().(type) {
-		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-			value = fmt.Sprintf("%d", val.Field(i).Interface())
-		case float32:
-			value = fmt.Sprintf("%.2f", val.Field(i).Interface())
-		case float64:
-			value = fmt.Sprintf("%.2f", val.Field(i).Interface())
-		case string:
-			value = fmt.Sprintf("%v", val.Field(i).Interface())
-		case []byte:
-			value = fmt.Sprintf("%#v", val.Field(i).Interface())
-		case time.Duration:
-			value = strconv.FormatFloat(v.Seconds()/86400.0, 'f', -1, 32)
-		case time.Time:
-			value = fmt.Sprintf("%v", val.Field(i).Interface())
-		case nil:
-			value = ""
-		case sql.NullString:
-			var s sql.NullString
-			if err := s.Scan(val.Field(i).Interface()); err != nil {
-				logger.Errorf(fmt.Sprintf("%v", err))
+	if a.CurRow == 0 {
+		results = append(results, a.Header...)
+	} else {
+		for i := 0; i < val.NumField(); i++ {
+			var value interface{}
+			switch v := val.Field(i).Interface().(type) {
+			case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+				value = fmt.Sprintf("%d", val.Field(i).Interface())
+			case float32:
+				value = fmt.Sprintf("%.2f", val.Field(i).Interface())
+			case float64:
+				value = fmt.Sprintf("%.2f", val.Field(i).Interface())
+			case string:
+				value = fmt.Sprintf("%v", val.Field(i).Interface())
+			case []byte:
+				value = fmt.Sprintf("%#v", val.Field(i).Interface())
+			case time.Duration:
+				value = strconv.FormatFloat(v.Seconds()/86400.0, 'f', -1, 32)
+			case time.Time:
+				value = fmt.Sprintf("%v", val.Field(i).Interface())
+			case nil:
+				value = ""
+			case sql.NullString:
+				var s sql.NullString
+				if err := s.Scan(val.Field(i).Interface()); err != nil {
+					//logger.Errorf(fmt.Sprintf("%v", err))
+				}
+				if s.Valid {
+					value = fmt.Sprintf("%v", s.String)
+				}
+			default:
+				value = fmt.Sprintf("%v", val.Field(i).Interface())
 			}
-			if s.Valid {
-				value = fmt.Sprintf("%v", s.String)
-			}
-		default:
-			value = fmt.Sprintf("%v", val.Field(i).Interface())
+			results = append(results, value.(string))
 		}
-		results = append(results, value.(string))
 	}
 	a.CurRow++
 	return results
