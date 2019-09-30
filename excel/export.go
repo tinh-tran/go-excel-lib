@@ -71,23 +71,28 @@ func ExportWorksheet(filename string, rows RowFetcher, SharedStrWriter *bufio.Wr
 			// }
 			var cellString = val.Value
 			newCol.V = strconv.Itoa(*cellsCount)
-			if rowCount != 1 {
+			if rowCount == 1 {
+				newCol.T = "s"
+				newCol.S = 15
+				rr.CustomFormat = true
+			} else if rowCount != 1 {
 				switch val.Type {
 				case "string":
 					newCol.T = "s"
+					newCol.S = 21
 					cellString = val.Value.(string)
 				case "float64":
 					newCol.T = "n"
-					newCol.S = 3
+					newCol.S = 20
 					cellString = val.Value.(float64)
 					newCol.V = fmt.Sprintf("%v", cellString)
 				case "int64", "int":
 					newCol.T = "n"
-					newCol.S = 3
+					newCol.S = 20
 					cellString = val.Value
 					newCol.V = fmt.Sprintf("%v", cellString)
 				case "time.Time":
-					newCol.S = 1
+					newCol.S = 22
 					newCol.T = "n"
 					cellString = val.Value.(time.Time).Format(constants.DATE_FORMAT_DD_MM_YYYY_TYPE_2)
 					newCol.V = fmt.Sprintf("%v", TimeToExcelTime(val.Value.(time.Time), false))
