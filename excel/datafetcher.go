@@ -2,7 +2,7 @@ package excel
 
 // Fetch next row, if no more row exists return nil
 type RowFetcher interface {
-	NextRow() []string
+	NextRow() []Value
 }
 
 // Fetch next sheet, if no more row exists return nil
