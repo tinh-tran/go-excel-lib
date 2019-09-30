@@ -5,7 +5,7 @@ import (
 	"bufio"
 	"encoding/xml"
 	"fmt"
-	"html"
+	"hrm-generate-excel/constants"
 	"io"
 	"os"
 	"strconv"
@@ -15,6 +15,11 @@ import (
 )
 
 var TempDir = "./xl/worksheets/"
+
+type Value struct {
+	Type  string
+	Value interface{}
+}
 
 func CleanNonUtfAndControlChar(s string) string {
 	s = strings.Map(func(r rune) rune {
@@ -28,7 +33,6 @@ func CleanNonUtfAndControlChar(s string) string {
 	}, s)
 	return s
 }
-
 
 func ExportWorksheet(filename string, rows RowFetcher, SharedStrWriter *bufio.Writer, cellsCount *int) {
 	file, _ := os.Create(filename)
@@ -65,11 +69,34 @@ func ExportWorksheet(filename string, rows RowFetcher, SharedStrWriter *bufio.Wr
 			// 	newCol.V = strconv.Itoa(uniqueString[val])
 			// 	sortedUsedStr = append(sortedUsedStr, val)
 			// }
+			var cellString = val.Value
 			newCol.V = strconv.Itoa(*cellsCount)
+			if rowCount != 1 {
+				switch val.Type {
+				case "string":
+					newCol.T = "s"
+					cellString = val.Value.(string)
+				case "float64":
+					newCol.T = "n"
+					newCol.S = 3
+					cellString = val.Value.(float64)
+					newCol.V = fmt.Sprintf("%v", cellString)
+				case "int64", "int":
+					newCol.T = "n"
+					newCol.S = 3
+					cellString = val.Value
+					newCol.V = fmt.Sprintf("%v", cellString)
+				case "time.Time":
+					newCol.S = 1
+					newCol.T = "n"
+					cellString = val.Value.(time.Time).Format(constants.DATE_FORMAT_DD_MM_YYYY_TYPE_2)
+					newCol.V = fmt.Sprintf("%v", TimeToExcelTime(val.Value.(time.Time), false))
+				}
+			}
 			*cellsCount++
 			rr.C = append(rr.C, newCol)
 			//fmt.Println(val, html.EscapeString(CleanNonUtfAndControlChar(val)))
-			SharedStrWriter.WriteString(fmt.Sprintf("<si><t>%s</t></si>", html.EscapeString(CleanNonUtfAndControlChar(val))))
+			SharedStrWriter.WriteString(fmt.Sprintf("<si><t>%v</t></si>", cellString))
 		}
 		rr.Spans = "1:10"
 		rr.Descent = "0.25"
@@ -94,28 +121,27 @@ func ExportWorksheet(filename string, rows RowFetcher, SharedStrWriter *bufio.Wr
 			Writer.Flush()
 		}
 		rowCount++
-
 	}
 	Writer.WriteString("</sheetData>")
 	Writer.WriteString("<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>")
 	Writer.WriteString("</worksheet>")
 	Writer.Flush()
 
-		//write shared strings
-		//sharedString := xlsxSST{}
-		//sharedString.Count = len(sortedUsedStr)
-		//sharedString.UniqueCount = len(sortedUsedStr)
-		// for _, val := range sortedUsedStr {
-		// 	ss := xlsxSI{}
-		// 	ss.T = val
-		// 	sharedString.SI = append(sharedString.SI, ss)
-		// }
+	//write shared strings
+	//sharedString := xlsxSST{}
+	//sharedString.Count = len(sortedUsedStr)
+	//sharedString.UniqueCount = len(sortedUsedStr)
+	// for _, val := range sortedUsedStr {
+	// 	ss := xlsxSI{}
+	// 	ss.T = val
+	// 	sharedString.SI = append(sharedString.SI, ss)
+	// }
 
-		// encoder := xml.NewEncoder(shaStr)
-		// e := encoder.Encode(sharedString)
-		// if e != nil {
-		// 	fmt.Println(e.Error())
-		// }
+	// encoder := xml.NewEncoder(shaStr)
+	// e := encoder.Encode(sharedString)
+	// if e != nil {
+	// 	fmt.Println(e.Error())
+	// }
 
 }
 func colCountToAlphaabet(idx int) string {
@@ -134,8 +160,11 @@ func Export(filename string, fetcher RowFetcher) {
 	now := time.Now()
 	sheetName := now.Format("20060102150405") //filename should be (pseudo)random
 	shaStr, _ := os.Create(sheetName + ".ss")
+	//sheetStr , _:= os.Create(sheetName + "_s.ss")
 	//defer shaStr.Close()
 	SharedStrWriter := bufio.NewWriter(shaStr)
+	//SheetStrWrite := bufio.NewWriter(sheetStr)
+
 	SharedStrWriter.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
 	SharedStrWriter.WriteString("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"0\" uniqueCount=\"0\">")
 	cellCount := 0
