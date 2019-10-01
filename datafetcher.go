@@ -1,4 +1,4 @@
-package excel
+package main
 
 // Fetch next row, if no more row exists return nil
 type RowFetcher interface {

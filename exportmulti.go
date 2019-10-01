@@ -1,4 +1,4 @@
-package excel
+package main
 
 import (
 	"archive/zip"
@@ -19,7 +19,6 @@ func RandStringRunes(n int) string {
 	}
 	return string(b)
 }
-
 
 func ExportMultisheet(filename string, fetcher SheetFetcher) {
 	now := time.Now()

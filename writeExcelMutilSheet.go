@@ -1,27 +1,20 @@
 package main
 
-import (
-	"fmt"
-	"go-excel-lib/excel"
-	"reflect"
-)
-
-type PayrollSheetFetcher struct {
+type SheetData struct {
 	curId      int
-	Sheets     []*PayrollSheet
+	Sheets     []*DummySheetData
 	sheetNames []string
 }
 
-type PayrollSheet struct {
+type DummySheetData struct {
 	Name   string
 	CurRow int
 	MaxRow int
 	MaxCol int
-	Data   []interface{}
-	Header []string
+	Data   []ExcelData
 }
 
-func (a *PayrollSheetFetcher) GetSheetNames() []string {
+func (a *SheetData) GetSheetNames() []string {
 	if len(a.sheetNames) > 0 {
 		return a.sheetNames
 	} else {
@@ -33,7 +26,7 @@ func (a *PayrollSheetFetcher) GetSheetNames() []string {
 	}
 }
 
-func (a *PayrollSheetFetcher) NextSheet() excel.Sheet {
+func (a *SheetData) NextSheet() Sheet {
 	if a.curId < len(a.Sheets) {
 		p := a.Sheets[a.curId]
 		a.curId++
@@ -43,31 +36,29 @@ func (a *PayrollSheetFetcher) NextSheet() excel.Sheet {
 	}
 }
 
-func (a *PayrollSheet) NextRow() []excel.Value {
+func (a *DummySheetData) NextRow() []Value {
 	if a.CurRow == a.MaxRow {
 		return nil
 	}
-	var results []excel.Value
-	if a.CurRow == 0 {
-		var result excel.Value
-		result.Type = "string"
-		for _, val := range a.Header {
-			result.Value = val
-			results = append(results, result)
+	var results []Value
+	//val := reflect.ValueOf(a.Data[a.CurRow].Value)
+	//valType := reflect.ValueOf(a.Data[a.CurRow].Type)
+
+	for i := 0; i < len(a.Data[a.CurRow].Value); i++ {
+		var result Value
+		if a.CurRow == 0 {
+			result.Type = a.Data[a.CurRow].Type[i]
+			result.Value = a.Data[a.CurRow].TitleHeader[i]
+		} else {
+			result.Type = a.Data[a.CurRow].Type[i]
+			result.Value = a.Data[a.CurRow].Value[i]
 		}
-	} else {
-		val := reflect.ValueOf(a.Data[a.CurRow])
-		for i := 0; i < val.NumField(); i++ {
-			var result excel.Value
-			result.Type = fmt.Sprintf("%v", reflect.TypeOf(val.Field(i).Interface()))
-			result.Value = val.Field(i).Interface()
-			results = append(results, result)
-		}
+		results = append(results, result)
 	}
 	a.CurRow++
 	return results
 }
 
-func (a *PayrollSheet) GetSheetName() string {
+func (a *DummySheetData) GetSheetName() string {
 	return a.Name
 }

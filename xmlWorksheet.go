@@ -1,4 +1,4 @@
-package excel
+package main
 
 // BSD 3-Clause License
 
