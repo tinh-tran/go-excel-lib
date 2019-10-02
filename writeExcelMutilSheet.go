@@ -49,10 +49,9 @@ func (a *DummySheetData) NextRow() []Value {
 		if a.CurRow == 0 {
 			result.Type = a.Data[a.CurRow].Type[i]
 			result.Value = a.Data[a.CurRow].TitleHeader[i]
-		} else {
-			result.Type = a.Data[a.CurRow].Type[i]
-			result.Value = a.Data[a.CurRow].Value[i]
 		}
+		result.Type = a.Data[a.CurRow].Type[i]
+		result.Value = a.Data[a.CurRow].Value[i]
 		results = append(results, result)
 	}
 	a.CurRow++
