@@ -13,38 +13,31 @@ type User struct {
 
 func main() {
 
-	var listDataPer = []User{}
+	//var listDataPer = []User{}
+
 	var data = User{
 		Name:     "AAA",
 		Age:      19,
 		BirthDay: time.Now(),
 	}
-	for i := 0; i < 100; i++ {
-		listDataPer = append(listDataPer, data)
-	}
-	listDataPerformance := make([]ExcelData, len(listDataPer))
-
-	for i, val := range listDataPer {
-		listDataPerformance[i].Value = []interface{}{val.Name, val.Age, val.BirthDay, fmt.Sprintf("SUM(B%v:B%v)", i, i+1)}
-		listDataPerformance[i].Number = []int{1, 2, 3, 4}
-		listDataPerformance[i].TitleHeader = []string{"Tên", "Tuổi", "Ngày sinh", "Test Formula"}
-		listDataPerformance[i].Type = []string{"string", "int", "time.Time", "formula"}
-	}
-	var sheetsSource = SheetData{}
 	var sheet1 = &DummySheetData{
-		MaxCol: 12,
-		CurRow: 0,
-		Name:   "TestOk",
-		MaxRow: len(listDataPer),
-		Data:   listDataPerformance}
+		MaxCol:    4,
+		CurRow:    0,
+		SheetName: "TestOk",
+		MaxRow:    100}
+	count := 0
+	for i := 0; i < 100; i++ {
+		count++
+		sheet1.SetValue(count, 1, data.Name, "string")
+		sheet1.SetValue(count, 2, data.Age, "int")
+		sheet1.SetValue(count, 3, data.BirthDay, "time.Time")
+		sheet1.SetValue(count, 4, fmt.Sprintf("=SUM(A%v+B%v", count+1, count+1), "formula")
+	}
 
-	//var sheet2 = &PayrollSheet{
-	//	MaxCol: 14,
-	//	CurRow: 0,
-	//	Name:   "Performance",
-	//	MaxRow: len(listDataPerformance),
-	//	Data:   listDataPerformance,
-	//}
+	var title = []string{"Tên", "Tuổi", "Ngày sinh", "Test Formula"}
+	sheet1.SetHeader(title)
+
+	var sheetsSource = SheetData{}
 
 	sheetsSource.Sheets = append(sheetsSource.Sheets, sheet1)
 	//sheetsSource.Sheets = append(sheetsSource.Sheets, sheet2)

@@ -7,11 +7,13 @@ type SheetData struct {
 }
 
 type DummySheetData struct {
-	Name   string
-	CurRow int
-	MaxRow int
-	MaxCol int
-	Data   []ExcelData
+	SheetName string
+	CurRow    int
+	MaxRow    int
+	MaxCol    int
+	Data      [][]Value
+	Header    []string
+	Value     []Value
 }
 
 func (a *SheetData) GetSheetNames() []string {
@@ -37,27 +39,60 @@ func (a *SheetData) NextSheet() Sheet {
 }
 
 func (a *DummySheetData) NextRow() []Value {
-	if a.CurRow == a.MaxRow {
+	//append header
+	if a.CurRow == a.MaxRow+1 {
 		return nil
 	}
 	var results []Value
-	//val := reflect.ValueOf(a.Data[a.CurRow].Value)
-	//valType := reflect.ValueOf(a.Data[a.CurRow].Type)
 
-	for i := 0; i < len(a.Data[a.CurRow].Value); i++ {
+	if a.CurRow == 0 {
 		var result Value
-		if a.CurRow == 0 {
-			result.Type = a.Data[a.CurRow].Type[i]
-			result.Value = a.Data[a.CurRow].TitleHeader[i]
+		result.Type = "string"
+		for i := 0; i < len(a.Header); i++ {
+			result.Value = a.Header[i]
+			results = append(results, result)
 		}
-		result.Type = a.Data[a.CurRow].Type[i]
-		result.Value = a.Data[a.CurRow].Value[i]
-		results = append(results, result)
+		a.CurRow++
+		return results
+	}
+	if a.CurRow < len(a.Data) {
+		val := a.Data[a.CurRow-1]
+		for _, valCell := range val {
+			var result Value
+			result.Type = valCell.Type
+			result.Value = valCell.Value
+			results = append(results, result)
+		}
+	} else {
+		return nil
 	}
 	a.CurRow++
 	return results
 }
 
 func (a *DummySheetData) GetSheetName() string {
-	return a.Name
+	return a.SheetName
+}
+
+func (a *DummySheetData) SetHeader(titles []string) {
+	a.Header = titles
+}
+
+func (a *DummySheetData) SetValue(row, cell int, value interface{}, typeCell string) {
+	if value != nil {
+		var data Value
+		data.Value = value
+		data.Type = typeCell
+		a.Value = append(a.Value, data)
+	}
+	if len(a.Value) == a.MaxCol {
+		a.SetRowValue(row, a.Value)
+		a.Value = nil
+	}
+}
+
+func (a *DummySheetData) SetRowValue(row int, value []Value) {
+	if row >= 0 {
+		a.Data = append(a.Data, value)
+	}
 }
