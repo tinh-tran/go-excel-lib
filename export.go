@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"encoding/xml"
 	"fmt"
-	"hrm-generate-excel/constants"
 	"io"
 	"os"
 	"strconv"
@@ -94,7 +93,7 @@ func ExportWorksheet(filename string, rows RowFetcher, SharedStrWriter *bufio.Wr
 				case "time.Time":
 					newCol.S = 22
 					newCol.T = "n"
-					cellString = val.Value.(time.Time).Format(constants.DATE_FORMAT_DD_MM_YYYY_TYPE_2)
+					cellString = val.Value.(time.Time).Format("02-01-2006")
 					newCol.V = fmt.Sprintf("%v", TimeToExcelTime(val.Value.(time.Time), false))
 				case "formula":
 					newCol.S = 20
